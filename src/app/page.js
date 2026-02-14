@@ -4,12 +4,15 @@ import { useState } from "react";
 
 export default function Home() {
   const [vertical, setVertical] = useState("MKW Installation");
-  const [action, setAction] = useState("Snag Site");
+  const [action, setAction] = useState("Update Status");
 
+  const [file, setFile] = useState(null);
   const [oldSiteRef, setOldSiteRef] = useState("");
+
   const [loading, setLoading] = useState(false);
 
   const [showDetails, setShowDetails] = useState(false);
+  const [validationResult, setValidationResult] = useState(null);
 
   // Customer Information
   const [mobile, setMobile] = useState("");
@@ -31,10 +34,13 @@ export default function Home() {
   const [workType, setWorkType] = useState("Snag for Wify");
   const [siteType, setSiteType] = useState("Retail");
 
+  const showFileUpload = action === "Update Status" || action === "Update Fields";
   const showOldSiteRefFlow = action === "Snag Site" || action === "Other";
 
   function resetAll() {
+    setFile(null);
     setOldSiteRef("");
+    setValidationResult(null);
     setShowDetails(false);
 
     setMobile("");
@@ -55,16 +61,51 @@ export default function Home() {
     setSiteType("Retail");
   }
 
+  async function handleValidateFile() {
+    if (!file) return alert("Please upload a CSV/Excel file.");
+
+    setLoading(true);
+    setValidationResult(null);
+
+    try {
+      // Later connect to n8n webhook
+      // const formData = new FormData();
+      // formData.append("vertical", vertical);
+      // formData.append("action", action);
+      // formData.append("file", file);
+
+      // const res = await fetch(process.env.NEXT_PUBLIC_VALIDATE_URL, {
+      //   method: "POST",
+      //   body: formData,
+      // });
+
+      // const data = await res.json();
+
+      const dummyValidation = {
+        status: "success",
+        message: "File validated successfully",
+        totalRows: 100,
+        validRows: 98,
+        invalidRows: 2,
+      };
+
+      setValidationResult(dummyValidation);
+    } catch (err) {
+      console.error(err);
+      alert("Validation failed.");
+    }
+
+    setLoading(false);
+  }
+
   async function handleFetchDetails() {
     if (!oldSiteRef.trim()) return alert("Please enter Old Site Ref.");
 
     setLoading(true);
+    setValidationResult(null);
 
     try {
-      // Later: Replace with n8n webhook fetch call
-      // const res = await fetch(process.env.NEXT_PUBLIC_FETCH_DETAILS_URL, { method: "POST", ... })
-
-      // Dummy data (UI testing)
+      // Later connect to n8n webhook
       const dummy = {
         customer: {
           mobile: "9876543210",
@@ -194,10 +235,24 @@ export default function Home() {
                 />
               </div>
             )}
+
+            {showFileUpload && (
+              <div>
+                <label style={styles.label}>
+                  <span style={styles.req}>*</span> Upload File
+                </label>
+                <input
+                  type="file"
+                  accept=".csv,.xlsx,.xls"
+                  style={styles.fileInput}
+                  onChange={(e) => setFile(e.target.files[0])}
+                />
+              </div>
+            )}
           </div>
 
-          {showOldSiteRefFlow && (
-            <div style={{ marginTop: "14px" }}>
+          <div style={{ marginTop: "14px" }}>
+            {showOldSiteRefFlow && (
               <button
                 style={styles.primaryBtn}
                 onClick={handleFetchDetails}
@@ -205,9 +260,34 @@ export default function Home() {
               >
                 {loading ? "Fetching..." : "Fetch Details"}
               </button>
-            </div>
-          )}
+            )}
+
+            {showFileUpload && (
+              <button
+                style={styles.primaryBtn}
+                onClick={handleValidateFile}
+                disabled={loading}
+              >
+                {loading ? "Validating..." : "Validate File"}
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* VALIDATION RESULT */}
+        {validationResult && (
+          <div style={styles.section}>
+            <div style={styles.sectionHeader}>
+              <span style={styles.sectionHeaderText}>Validation Result</span>
+            </div>
+
+            <div style={styles.sectionBody}>
+              <pre style={styles.resultBox}>
+                {JSON.stringify(validationResult, null, 2)}
+              </pre>
+            </div>
+          </div>
+        )}
 
         {/* CUSTOMER DETAILS */}
         {showDetails && (
@@ -467,6 +547,7 @@ const styles = {
     padding: "20px",
     fontFamily: "Arial, sans-serif",
     fontSize: "12px",
+    color: "#000",
   },
   container: {
     maxWidth: "1100px",
@@ -483,16 +564,16 @@ const styles = {
 
   pageTitle: {
     fontSize: "18px",
-    fontWeight: "700",
+    fontWeight: "800",
     margin: 0,
-    color: "#111827",
+    color: "#000",
   },
 
   pageSubTitle: {
     fontSize: "12px",
     marginTop: "6px",
     marginBottom: "18px",
-    color: "#4b5563",
+    color: "#111827",
   },
 
   row3: {
@@ -504,9 +585,9 @@ const styles = {
   label: {
     display: "block",
     fontSize: "12px",
-    fontWeight: "600",
+    fontWeight: "700",
     marginBottom: "6px",
-    color: "#111827",
+    color: "#000",
   },
 
   input: {
@@ -516,6 +597,17 @@ const styles = {
     border: "1px solid #cfd6dd",
     fontSize: "12px",
     background: "white",
+    color: "#000",
+  },
+
+  fileInput: {
+    width: "100%",
+    padding: "6px",
+    borderRadius: "4px",
+    border: "1px solid #cfd6dd",
+    fontSize: "12px",
+    background: "white",
+    color: "#000",
   },
 
   primaryBtn: {
@@ -524,7 +616,7 @@ const styles = {
     color: "white",
     border: "none",
     borderRadius: "4px",
-    fontWeight: "600",
+    fontWeight: "700",
     cursor: "pointer",
   },
 
@@ -539,12 +631,14 @@ const styles = {
     padding: "10px 14px",
     borderBottom: "1px solid #dfe3e8",
     background: "#f9fafb",
-    fontWeight: "700",
+    fontWeight: "800",
     fontSize: "13px",
+    color: "#000",
   },
 
   sectionHeaderText: {
-    color: "#111827",
+    color: "#000",
+    fontWeight: "800",
   },
 
   sectionBody: {
@@ -566,9 +660,9 @@ const styles = {
 
   boxTitle: {
     fontSize: "12px",
-    fontWeight: "700",
+    fontWeight: "800",
     marginBottom: "10px",
-    color: "#374151",
+    color: "#000",
     borderBottom: "1px solid #e5e7eb",
     paddingBottom: "6px",
   },
@@ -576,10 +670,10 @@ const styles = {
   smallLabel: {
     display: "block",
     fontSize: "11px",
-    fontWeight: "600",
+    fontWeight: "700",
     marginTop: "10px",
     marginBottom: "6px",
-    color: "#111827",
+    color: "#000",
   },
 
   smallInput: {
@@ -589,6 +683,7 @@ const styles = {
     border: "1px solid #cfd6dd",
     fontSize: "12px",
     background: "white",
+    color: "#000",
   },
 
   smallBtn: {
@@ -598,7 +693,7 @@ const styles = {
     borderRadius: "4px",
     color: "white",
     fontSize: "11px",
-    fontWeight: "600",
+    fontWeight: "700",
     cursor: "pointer",
     marginBottom: "10px",
   },
@@ -621,7 +716,7 @@ const styles = {
     fontSize: "11px",
     color: "#0b5ed7",
     cursor: "pointer",
-    fontWeight: "600",
+    fontWeight: "700",
   },
 
   badge: {
@@ -630,7 +725,7 @@ const styles = {
     color: "#065f46",
     padding: "2px 8px",
     borderRadius: "10px",
-    fontWeight: "700",
+    fontWeight: "800",
   },
 
   searchRow: {
@@ -645,6 +740,8 @@ const styles = {
     borderRadius: "4px",
     border: "1px solid #cfd6dd",
     fontSize: "12px",
+    background: "white",
+    color: "#000",
   },
 
   searchBtn: {
@@ -654,6 +751,7 @@ const styles = {
     background: "#f9fafb",
     cursor: "pointer",
     fontSize: "12px",
+    color: "#000",
   },
 
   grid2: {
@@ -680,6 +778,7 @@ const styles = {
   req: {
     color: "red",
     marginRight: "3px",
+    fontWeight: "800",
   },
 
   createBtn: {
@@ -689,14 +788,24 @@ const styles = {
     color: "white",
     border: "none",
     borderRadius: "4px",
-    fontWeight: "700",
+    fontWeight: "800",
     cursor: "pointer",
+  },
+
+  resultBox: {
+    background: "#f9fafb",
+    border: "1px solid #e5e7eb",
+    padding: "12px",
+    borderRadius: "6px",
+    fontSize: "12px",
+    color: "#000",
   },
 
   footer: {
     textAlign: "center",
     fontSize: "11px",
-    color: "#6b7280",
+    color: "#111827",
     marginTop: "15px",
+    fontWeight: "600",
   },
 };
