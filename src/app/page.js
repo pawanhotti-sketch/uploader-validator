@@ -3,24 +3,41 @@
 import { useState } from "react";
 
 export default function Home() {
+  const [vertical, setVertical] = useState("MKW Installation");
+  const [action, setAction] = useState("Update Status");
+
   const [file, setFile] = useState(null);
-  const [projectName, setProjectName] = useState("");
-  const [actionType, setActionType] = useState("create");
+  const [oldTicketId, setOldTicketId] = useState("");
+
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const showFileUpload = action === "Update Status" || action === "Update Fields";
+
   async function handleValidate() {
-    if (!file) return alert("Please upload a CSV/Excel file.");
-    if (!projectName.trim()) return alert("Please enter Project Name.");
+    setResult(null);
+
+    if (!vertical) return alert("Please select Vertical.");
+    if (!action) return alert("Please select Action.");
+
+    if (showFileUpload) {
+      if (!file) return alert("Please upload a CSV/Excel file.");
+    } else {
+      if (!oldTicketId.trim()) return alert("Please enter Old Ticket ID.");
+    }
 
     setLoading(true);
-    setResult(null);
 
     try {
       const formData = new FormData();
-      formData.append("file", file);
-      formData.append("projectName", projectName);
-      formData.append("actionType", actionType);
+      formData.append("vertical", vertical);
+      formData.append("action", action);
+
+      if (showFileUpload) {
+        formData.append("file", file);
+      } else {
+        formData.append("oldTicketId", oldTicketId);
+      }
 
       const res = await fetch(process.env.NEXT_PUBLIC_VALIDATE_URL, {
         method: "POST",
@@ -50,8 +67,9 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          projectName,
-          actionType,
+          vertical,
+          action,
+          oldTicketId: showFileUpload ? null : oldTicketId,
           validationResult: result,
         }),
       });
@@ -60,7 +78,7 @@ export default function Home() {
       alert("Update Response: " + JSON.stringify(data));
     } catch (err) {
       console.error(err);
-      alert("Update failed. Check your update webhook workflow.");
+      alert("Update failed. Check update workflow.");
     }
 
     setLoading(false);
@@ -72,41 +90,71 @@ export default function Home() {
         <header style={styles.header}>
           <h1 style={styles.title}>📊 Upload & Validate</h1>
           <p style={styles.subtitle}>
-            Upload your Excel/CSV file, validate it instantly, then click Update
-            to push data to the API.
+            Select vertical, choose action, validate input, then click Update to
+            trigger the final API call.
           </p>
         </header>
 
         <div style={styles.card}>
-          <label style={styles.label}>Project Name</label>
-          <input
-            style={styles.input}
-            placeholder="Eg: TMS Users India - Jan 26"
-            value={projectName}
-            onChange={(e) => setProjectName(e.target.value)}
-          />
-
-          <label style={styles.label}>Action Type</label>
+          {/* Vertical */}
+          <label style={styles.label}>Vertical</label>
           <select
             style={styles.input}
-            value={actionType}
-            onChange={(e) => setActionType(e.target.value)}
+            value={vertical}
+            onChange={(e) => setVertical(e.target.value)}
           >
-            <option value="create">Create Records</option>
-            <option value="update">Update Existing Records</option>
-            <option value="delete">Delete Records</option>
+            <option value="MKW Installation">MKW Installation</option>
+            <option value="MKW Services">MKW Services</option>
+            <option value="Other">Other</option>
           </select>
 
-          <label style={styles.label}>Upload File</label>
-          <input
-            style={styles.fileInput}
-            type="file"
-            accept=".csv,.xlsx,.xls"
-            onChange={(e) => setFile(e.target.files[0])}
-          />
+          {/* Action */}
+          <label style={styles.label}>Action</label>
+          <select
+            style={styles.input}
+            value={action}
+            onChange={(e) => {
+              setAction(e.target.value);
+              setFile(null);
+              setOldTicketId("");
+              setResult(null);
+            }}
+          >
+            <option value="Update Status">Update Status</option>
+            <option value="Update Fields">Update Fields</option>
+            <option value="Snag Site">Snag Site</option>
+            <option value="Other">Other</option>
+          </select>
 
-          <button style={styles.primaryBtn} onClick={handleValidate} disabled={loading}>
-            {loading ? "⏳ Validating..." : "Validate File"}
+          {/* Conditional Field */}
+          {showFileUpload ? (
+            <>
+              <label style={styles.label}>Upload File</label>
+              <input
+                style={styles.fileInput}
+                type="file"
+                accept=".csv,.xlsx,.xls"
+                onChange={(e) => setFile(e.target.files[0])}
+              />
+            </>
+          ) : (
+            <>
+              <label style={styles.label}>Old Ticket ID</label>
+              <input
+                style={styles.input}
+                placeholder="Enter Old Ticket ID"
+                value={oldTicketId}
+                onChange={(e) => setOldTicketId(e.target.value)}
+              />
+            </>
+          )}
+
+          <button
+            style={styles.primaryBtn}
+            onClick={handleValidate}
+            disabled={loading}
+          >
+            {loading ? "⏳ Validating..." : "Validate"}
           </button>
         </div>
 
@@ -141,7 +189,7 @@ export default function Home() {
 
             {result.status !== "success" && (
               <p style={styles.errorText}>
-                ❌ Fix the errors and upload again.
+                ❌ Fix the errors and validate again.
               </p>
             )}
           </div>
