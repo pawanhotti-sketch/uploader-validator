@@ -1,21 +1,16 @@
-export async function GET() {
-  return Response.json({ message: "Confirm API working (GET)" });
-}
-
 export async function POST(req) {
   const body = await req.json();
-  const { batchId } = body;
 
-  return Response.json({
-    batchId,
-    rows: [
-      {
-        tmsId: "TMS-1001",
-        brand: "Livspace",
-        serviceType: "Civil Interior",
-        newStatus: "Closed",
-        remark: "Successfully updated"
-      }
-    ]
+  const n8nRes = await fetch(`${process.env.N8N_BASE_URL}/webhook/bulk/confirm`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-webhook-secret": process.env.N8N_WEBHOOK_SECRET,
+    },
+    body: JSON.stringify(body),
   });
+
+  const data = await n8nRes.json();
+
+  return Response.json(data, { status: n8nRes.status });
 }
