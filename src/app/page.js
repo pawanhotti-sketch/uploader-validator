@@ -57,11 +57,15 @@ const GlobalStyles = () => (
     }
 
     /* Hover effects */
-    .selection-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.12);
-      border-color: rgba(59, 130, 246, 0.5);
-    }
+.selection-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  border-color: rgba(59, 130, 246, 0.7);
+  transition: "all 0.25s ease",
+  box-shadow: 
+    0 25px 50px rgba(0,0,0,0.18),
+    0 0 0 1px rgba(59, 130, 246, 0.3),
+    0 0 25px rgba(59, 130, 246, 0.35);
+}
     
     .logo-container:hover .tooltip {
       opacity: 1;
