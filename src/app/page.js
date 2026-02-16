@@ -462,9 +462,6 @@ const parseCSV = (file) => {
   });
 };
 
-  return rows;
-};
-
 export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [isLanding, setIsLanding] = useState(true);
