@@ -1,7 +1,7 @@
 export async function POST(req) {
   const body = await req.json();
 
-  const response = await fetch(`${process.env.N8N_BASE_URL}/webhook/bulk/validate`, {
+  const response = await fetch(`${process.env.N8N_BASE_URL}/webhook/bulk/validate-file`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
