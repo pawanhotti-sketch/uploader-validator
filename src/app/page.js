@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Papa from "papaparse";
 import Image from "next/image";
 
 // --- Global Styles & Animations ---
@@ -371,6 +372,7 @@ const ToolSelector = ({
         <div style={styles.fileDrop}>
           <input
             type="file"
+            accept=".csv"
             style={styles.fileInput}
             onChange={(e) => setBulkFile(e.target.files?.[0])}
           />
@@ -440,6 +442,29 @@ const ToolSelector = ({
 
 // --- Main Page ---
 
+const parseCSV = (file) => {
+  return new Promise((resolve, reject) => {
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        const rows = results.data.map((row) => ({
+          tmsId: row["TMS ID"]?.trim() || "",
+          brand: row["Brand Name"]?.trim() || "",
+          serviceType: row["Service Type"]?.trim() || "",
+          newStatus: row["Update Status To"]?.trim() || "",
+        }));
+
+        resolve(rows);
+      },
+      error: (err) => reject(err),
+    });
+  });
+};
+
+  return rows;
+};
+
 export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [isLanding, setIsLanding] = useState(true);
@@ -459,33 +484,40 @@ export default function Home() {
 
   useEffect(() => setMounted(true), []);
 
-  const handleBulkUpload = async () => {
-    if (!bulkFile) return;
+  const N8N_VALIDATE_URL = "https://n8n.wiffy.ai/webhook/Uploaded-File";
 
-    try {
-      setLoading(true);
+const handleBulkUpload = async () => {
+  if (!bulkFile) return;
 
-      const res = await fetch("/api/bulk/validate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: bulkAction }),
-      });
+  try {
+    setLoading(true);
 
-      const data = await res.json();
+    const rows = await parseCSV(bulkFile);
 
-      setBatchId(data.batchId);
-      setValidationRows(data.rows);
-      setStage("preview");
+    const res = await fetch(N8N_VALIDATE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: bulkAction,
+        rows,
+      }),
+    });
 
-      setIsLanding(false);
-      setViewMode("validation");
-    } catch (err) {
-      console.error(err);
-      alert("Error processing file.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const data = await res.json();
+
+    setBatchId(data.batchId); // returned from n8n
+    setValidationRows(data.rows); // validated rows
+    setStage("preview");
+
+    setIsLanding(false);
+    setViewMode("validation");
+  } catch (err) {
+    console.error(err);
+    alert("Error processing file.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleConfirmRun = async () => {
     if (!batchId) {
@@ -496,7 +528,7 @@ export default function Home() {
     try {
       setLoading(true);
 
-      const res = await fetch("/api/bulk/confirm", {
+      const res = await fetch("https://n8n.wiffy.ai/webhook/confirm-file", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ batchId }),
