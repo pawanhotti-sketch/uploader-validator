@@ -186,9 +186,10 @@ const ValidationTable = ({ rows, actionName, stage, onConfirm }) => {
 
   if (actionName === "Update Status") {
     columns = ["TMS ID", "Brand Name", "Service Type", "Updating Status To"];
+    columns.push("Remark");
 
     if (stage === "result") {
-      columns.push("Remark");
+      columns.push("Final Status");
     }
   } else {
     columns = ["Ticket ID", "Status", "Updated By", "Date Processed", "Error Log"];
@@ -241,19 +242,36 @@ const ValidationTable = ({ rows, actionName, stage, onConfirm }) => {
                       {row.newStatus}
                     </td>
 
-                    {stage === "result" && (
-                      <td
-                        style={{
-                          ...styles.td,
-                          fontWeight: 600,
-                          color: row.remark?.toLowerCase().includes("success")
-                            ? "#10b981"
-                            : "#ef4444",
-                        }}
-                      >
-                        {row.remark || "--"}
-                      </td>
-                    )}
+                    <td
+  style={{
+    ...styles.td,
+    fontWeight: 600,
+    color: row.remark?.toLowerCase().includes("success")
+      ? "#10b981"
+      : row.remark
+      ? "#ef4444"
+      : "#6e6e73",
+  }}
+>
+  {row.remark || "--"}
+</td>
+
+{stage === "result" && (
+  <td
+    style={{
+      ...styles.td,
+      fontWeight: 600,
+      color: row.finalStatus?.toLowerCase().includes("success")
+        ? "#10b981"
+        : row.finalStatus
+        ? "#ef4444"
+        : "#6e6e73",
+    }}
+  >
+    {row.finalStatus || "--"}
+  </td>
+)}
+
                   </>
                 ) : (
                   <>
@@ -274,7 +292,7 @@ const ValidationTable = ({ rows, actionName, stage, onConfirm }) => {
         <div style={styles.footerRow}>
           <PulsingButton
             label={`Confirm & Run: ${actionName}`}
-            active={true}
+            active={rows.every(r => r.remark?.toLowerCase().includes("ready"))}
             onClick={onConfirm}
             style={{ width: "auto", paddingLeft: 32, paddingRight: 32 }}
           />
