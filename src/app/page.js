@@ -110,8 +110,7 @@ const GlobalStyles = () => (
 
 // --- Components ---
 
-const Spinner = () => (
-  <div style={styles.spinnerWrapper}>
+
     const Spinner = () => (
   <div style={styles.spinnerWrapper}></div>
 );
