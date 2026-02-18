@@ -326,8 +326,8 @@ const hasInvalid = invalidRows.length > 0;
     />
   )}
 </div>
-      )}
-    </GlassCard>
+
+ </GlassCard>
   );
 };
 
