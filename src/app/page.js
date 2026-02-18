@@ -298,34 +298,36 @@ const hasInvalid = invalidRows.length > 0;
       </div>
 
       {stage !== "result" && (
-        <div style={styles.footerRow}>
-<div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-  {hasInvalid ? (
-    <>
-      <PulsingButton
-        label="Update Status for Valid Rows"
-        active={validRows.length > 0}
-        onClick={onConfirm}
-        style={{ width: "auto", paddingLeft: 28, paddingRight: 28 }}
-      />
+  <div style={styles.footerRow}>
+    <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+      {hasInvalid ? (
+        <>
+          <PulsingButton
+            label="Update Status for Valid Rows"
+            active={validRows.length > 0}
+            onClick={onConfirm}
+            style={{ width: "auto", paddingLeft: 28, paddingRight: 28 }}
+          />
 
-      <PulsingButton
-        label="Reupload Correct File"
-        active={true}
-        secondary={true}
-        onClick={() => window.location.reload()}
-        style={{ width: "auto", paddingLeft: 28, paddingRight: 28 }}
-      />
-    </>
-  ) : (
-    <PulsingButton
-      label="Update Status"
-      active={validRows.length > 0}
-      onClick={onConfirm}
-      style={{ width: "auto", paddingLeft: 32, paddingRight: 32 }}
-    />
-  )}
-</div>
+          <PulsingButton
+            label="Reupload Correct File"
+            active={true}
+            secondary={true}
+            onClick={() => window.location.reload()}
+            style={{ width: "auto", paddingLeft: 28, paddingRight: 28 }}
+          />
+        </>
+      ) : (
+        <PulsingButton
+          label="Update Status"
+          active={validRows.length > 0}
+          onClick={onConfirm}
+          style={{ width: "auto", paddingLeft: 32, paddingRight: 32 }}
+        />
+      )}
+    </div>
+  </div>
+)}
 
  </GlassCard>
   );
