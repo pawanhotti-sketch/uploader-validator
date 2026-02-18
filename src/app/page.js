@@ -713,7 +713,18 @@ export default function Home() {
   const handleFetchDetails = () => {};
   const handleQuickUpload = () => {};
 
-  const goHome = () => {
+  
+  const handleReupload = () => {
+    // Reset only upload + validation state, keep tool selection
+    setBulkFile(null);
+    setValidationRows([]);
+    setBatchId(null);
+    setStage("preview");
+    setViewMode("empty");
+    setIsLanding(true);
+  };
+
+const goHome = () => {
     setIsLanding(true);
     setSelectedTool(null);
     setBulkFile(null);
@@ -815,6 +826,7 @@ export default function Home() {
                   actionName={bulkAction}
                   stage={stage}
                   onConfirm={handleConfirmRun}
+                  onReupload={handleReupload}
                   onReupload={handleReupload}
                 />
               )}
