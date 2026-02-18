@@ -563,7 +563,8 @@ const handleBulkUpload = async () => {
   batchId,
   rows: validationRows.filter(
     (r) => r.remark && r.remark.toLowerCase().includes("ready")
-         ),
+          ),
+        });
       });
 
       const data = await res.json();
