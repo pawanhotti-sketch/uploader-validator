@@ -714,6 +714,15 @@ export default function Home() {
   const handleQuickUpload = () => {};
 
   
+  const handleReupload = () => {
+    // Reset only upload + validation state, keep tool selection
+    setBulkFile(null);
+    setValidationRows([]);
+    setBatchId(null);
+    setStage("preview");
+    setViewMode("empty");
+    setIsLanding(true);
+  };
 
 const goHome = () => {
     setIsLanding(true);
