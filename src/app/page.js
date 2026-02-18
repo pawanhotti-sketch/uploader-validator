@@ -112,8 +112,8 @@ const GlobalStyles = () => (
 
 const Spinner = () => (
   <div style={styles.spinnerWrapper}>
-    <div style={styles.spinner} />
-  </div>
+    const Spinner = () => (
+  <div style={styles.spinnerWrapper}></div>
 );
 
 const PulsingButton = ({
@@ -517,6 +517,9 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState("empty");
 
+  const [validCount, setValidCount] = useState(0);
+  const [invalidCount, setInvalidCount] = useState(0);
+
   const [selectedTool, setSelectedTool] = useState(null);
   const [bulkAction, setBulkAction] = useState("Update Status");
   const [bulkFile, setBulkFile] = useState(null);
@@ -550,9 +553,11 @@ const handleBulkUpload = async () => {
     });
 
     const data = await res.json();
+    setBatchId(data.batchId);
 
-    setBatchId(data.batchId); // returned from n8n
-    setValidationRows(data.rows); // validated rows
+    setValidationRows(data.rows); // returned from n8n
+    setValidCount(data.validCount); // validated rows
+    setInvalidCount(data.invalidCount);
     setStage("preview");
 
     setIsLanding(false);
