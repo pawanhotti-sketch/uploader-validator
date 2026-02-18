@@ -419,11 +419,11 @@ const ToolSelector = ({
         <label style={styles.label}>Data Source</label>
         <div style={styles.fileDrop}>
           <input
-            type="file"
-            accept=".csv"
-            style={styles.fileInput}
-            onChange={(e) => setBulkFile(e.target.files?.[0])}
-          />
+  type="file"
+  accept=".csv,text/csv"
+  style={styles.fileInput}
+  onChange={(e) => setBulkFile(e.target.files?.[0])}
+/>
           <span style={styles.fileName}>{bulkFile ? bulkFile.name : "Choose file..."}</span>
         </div>
 
@@ -515,6 +515,15 @@ export default function Home() {
   const [isLanding, setIsLanding] = useState(true);
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState("empty");
+
+const isValidCsv =
+  bulkFile &&
+  (bulkFile.type === "text/csv" || bulkFile.name.toLowerCase().endsWith(".csv"));
+
+const isValidSize = bulkFile && bulkFile.size <= 10 * 1024 * 1024; // 10MB
+
+const canProcessFile = isValidCsv && isValidSize;
+
 
   const [validCount, setValidCount] = useState(0);
   const [invalidCount, setInvalidCount] = useState(0);
