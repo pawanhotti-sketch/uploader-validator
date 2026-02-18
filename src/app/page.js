@@ -194,6 +194,15 @@ const ValidationTable = ({ rows, actionName, stage, onConfirm }) => {
   } else {
     columns = ["Ticket ID", "Status", "Updated By", "Date Processed", "Error Log"];
   }
+  const invalidRows = rows.filter(
+  (r) => r.remark && !r.remark.toLowerCase().includes("ready")
+);
+
+const validRows = rows.filter(
+  (r) => r.remark && r.remark.toLowerCase().includes("ready")
+);
+
+const hasInvalid = invalidRows.length > 0;
 
   return (
     <GlassCard style={styles.tableCard}>
@@ -246,7 +255,7 @@ const ValidationTable = ({ rows, actionName, stage, onConfirm }) => {
   style={{
     ...styles.td,
     fontWeight: 600,
-    color: row.remark?.toLowerCase().includes("success")
+    color: row.remark?.toLowerCase().includes("ready")
       ? "#10b981"
       : row.remark
       ? "#ef4444"
@@ -291,11 +300,15 @@ const ValidationTable = ({ rows, actionName, stage, onConfirm }) => {
       {stage !== "result" && (
         <div style={styles.footerRow}>
           <PulsingButton
-            label={`Confirm & Run: ${actionName}`}
-            active={rows.every(r => r.remark?.toLowerCase().includes("ready"))}
-            onClick={onConfirm}
-            style={{ width: "auto", paddingLeft: 32, paddingRight: 32 }}
-          />
+  label={
+    hasInvalid
+      ? "Update status for valid rows & Reupload correct file"
+      : "Update Status"
+  }
+  active={validRows.length > 0}
+  onClick={onConfirm}
+  style={{ width: "auto", paddingLeft: 32, paddingRight: 32 }}
+/>
         </div>
       )}
     </GlassCard>
@@ -546,7 +559,11 @@ const handleBulkUpload = async () => {
       const res = await fetch("https://n8n.wiffy.ai/webhook/confirm-file", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ batchId }),
+        body: JSON.stringify({
+  batchId,
+  rows: validationRows.filter(
+    (r) => r.remark && r.remark.toLowerCase().includes("ready")
+         ),
       });
 
       const data = await res.json();
