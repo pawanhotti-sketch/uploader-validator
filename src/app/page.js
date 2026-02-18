@@ -556,16 +556,16 @@ const handleBulkUpload = async () => {
     try {
       setLoading(true);
 
-      const res = await fetch("https://n8n.wiffy.ai/webhook/confirm-file", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-  batchId,
-  rows: validationRows.filter(
-    (r) => r.remark && r.remark.toLowerCase().includes("ready")
-          ),
-        });
-      });
+const res = await fetch("https://n8n.wiffy.ai/webhook/confirm-file", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    batchId,
+    rows: validationRows.filter(
+      (r) => r.remark && r.remark.toLowerCase().includes("ready")
+    ),
+  }),
+});
 
       const data = await res.json();
 
