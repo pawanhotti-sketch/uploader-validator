@@ -1,17 +1,22 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import Papa from "papaparse";
 import Image from "next/image";
 
-// --- Global Styles & Animations ---
+/**
+ * =========================================================
+ * GLOBAL STYLES
+ * =========================================================
+ */
 const GlobalStyles = () => (
   <style jsx global>{`
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap');
+    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap");
 
     :root {
       --primary-rgb: 59, 130, 246;
       --success-rgb: 16, 185, 129;
+      --danger-rgb: 239, 68, 68;
     }
 
     body {
@@ -52,7 +57,7 @@ const GlobalStyles = () => (
       }
       50% {
         box-shadow: 0 0 20px 10px rgba(var(--primary-rgb), 0);
-        transform: scale(1.05);
+        transform: scale(1.03);
       }
       100% {
         box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0);
@@ -67,7 +72,7 @@ const GlobalStyles = () => (
       }
       50% {
         box-shadow: 0 0 20px 10px rgba(var(--success-rgb), 0);
-        transform: scale(1.03);
+        transform: scale(1.02);
       }
       100% {
         box-shadow: 0 0 0 0 rgba(var(--success-rgb), 0);
@@ -108,11 +113,15 @@ const GlobalStyles = () => (
   `}</style>
 );
 
-// --- Components ---
-
-
-    const Spinner = () => (
-  <div style={styles.spinnerWrapper}></div>
+/**
+ * =========================================================
+ * SMALL COMPONENTS
+ * =========================================================
+ */
+const Spinner = () => (
+  <div style={styles.spinnerWrapper}>
+    <div style={styles.spinner} />
+  </div>
 );
 
 const PulsingButton = ({
@@ -178,9 +187,12 @@ const SelectionCard = ({ icon, title, desc, onClick }) => (
   </div>
 );
 
-// --- Validation Table ---
-
-const ValidationTable = ({ rows, actionName, stage, onConfirm }) => {
+/**
+ * =========================================================
+ * VALIDATION TABLE
+ * =========================================================
+ */
+const ValidationTable = ({ rows, actionName, stage, onConfirm, onReupload }) => {
   let columns = [];
 
   if (actionName === "Update Status") {
@@ -193,15 +205,16 @@ const ValidationTable = ({ rows, actionName, stage, onConfirm }) => {
   } else {
     columns = ["Ticket ID", "Status", "Updated By", "Date Processed", "Error Log"];
   }
+
   const invalidRows = rows.filter(
-  (r) => r.remark && !r.remark.toLowerCase().includes("ready")
-);
+    (r) => r.remark && !r.remark.toLowerCase().includes("ready")
+  );
 
-const validRows = rows.filter(
-  (r) => r.remark && r.remark.toLowerCase().includes("ready")
-);
+  const validRows = rows.filter(
+    (r) => r.remark && r.remark.toLowerCase().includes("ready")
+  );
 
-const hasInvalid = invalidRows.length > 0;
+  const hasInvalid = invalidRows.length > 0;
 
   return (
     <GlassCard style={styles.tableCard}>
@@ -215,7 +228,20 @@ const hasInvalid = invalidRows.length > 0;
               ? "Final status update results with remarks."
               : "Review the data before proceeding."}
           </p>
+
+          <div style={{ marginTop: 10, display: "flex", gap: 10 }}>
+            <span style={styles.statChip}>
+              Total: <b>{rows.length}</b>
+            </span>
+            <span style={{ ...styles.statChip, borderColor: "rgba(16,185,129,0.4)" }}>
+              Valid: <b style={{ color: "#10b981" }}>{validRows.length}</b>
+            </span>
+            <span style={{ ...styles.statChip, borderColor: "rgba(239,68,68,0.4)" }}>
+              Invalid: <b style={{ color: "#ef4444" }}>{invalidRows.length}</b>
+            </span>
+          </div>
         </div>
+
         <span style={styles.badge}>
           {stage === "result" ? "Completed" : "Ready to Sync"}
         </span>
@@ -238,7 +264,7 @@ const hasInvalid = invalidRows.length > 0;
               <tr
                 key={i}
                 style={{
-                  animation: `fade-in-up 0.3s ease ${i * 0.05}s backwards`,
+                  animation: `fade-in-up 0.3s ease ${i * 0.03}s backwards`,
                 }}
               >
                 {actionName === "Update Status" ? (
@@ -251,35 +277,34 @@ const hasInvalid = invalidRows.length > 0;
                     </td>
 
                     <td
-  style={{
-    ...styles.td,
-    fontWeight: 600,
-    color: row.remark?.toLowerCase().includes("ready")
-      ? "#10b981"
-      : row.remark
-      ? "#ef4444"
-      : "#6e6e73",
-  }}
->
-  {row.remark || "--"}
-</td>
+                      style={{
+                        ...styles.td,
+                        fontWeight: 600,
+                        color: row.remark?.toLowerCase().includes("ready")
+                          ? "#10b981"
+                          : row.remark
+                          ? "#ef4444"
+                          : "#6e6e73",
+                      }}
+                    >
+                      {row.remark || "--"}
+                    </td>
 
-{stage === "result" && (
-  <td
-    style={{
-      ...styles.td,
-      fontWeight: 600,
-      color: row.finalStatus?.toLowerCase().includes("success")
-        ? "#10b981"
-        : row.finalStatus
-        ? "#ef4444"
-        : "#6e6e73",
-    }}
-  >
-    {row.finalStatus || "--"}
-  </td>
-)}
-
+                    {stage === "result" && (
+                      <td
+                        style={{
+                          ...styles.td,
+                          fontWeight: 600,
+                          color: row.finalStatus?.toLowerCase().includes("success")
+                            ? "#10b981"
+                            : row.finalStatus
+                            ? "#ef4444"
+                            : "#6e6e73",
+                        }}
+                      >
+                        {row.finalStatus || "--"}
+                      </td>
+                    )}
                   </>
                 ) : (
                   <>
@@ -297,43 +322,45 @@ const hasInvalid = invalidRows.length > 0;
       </div>
 
       {stage !== "result" && (
-  <div style={styles.footerRow}>
-    <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-      {hasInvalid ? (
-        <>
-          <PulsingButton
-            label="Update Status for Valid Rows"
-            active={validRows.length > 0}
-            onClick={onConfirm}
-            style={{ width: "auto", paddingLeft: 28, paddingRight: 28 }}
-          />
+        <div style={styles.footerRow}>
+          <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+            {hasInvalid ? (
+              <>
+                <PulsingButton
+                  label="Update Status for Valid Rows"
+                  active={validRows.length > 0}
+                  onClick={onConfirm}
+                  style={{ width: "auto", paddingLeft: 28, paddingRight: 28 }}
+                />
 
-          <PulsingButton
-            label="Reupload Correct File"
-            active={true}
-            secondary={true}
-            onClick={() => window.location.reload()}
-            style={{ width: "auto", paddingLeft: 28, paddingRight: 28 }}
-          />
-        </>
-      ) : (
-        <PulsingButton
-          label="Update Status"
-          active={validRows.length > 0}
-          onClick={onConfirm}
-          style={{ width: "auto", paddingLeft: 32, paddingRight: 32 }}
-        />
+                <PulsingButton
+                  label="Reupload Correct File"
+                  active={true}
+                  secondary={true}
+                  onClick={onReupload}
+                  style={{ width: "auto", paddingLeft: 28, paddingRight: 28 }}
+                />
+              </>
+            ) : (
+              <PulsingButton
+                label="Update Status"
+                active={validRows.length > 0}
+                onClick={onConfirm}
+                style={{ width: "auto", paddingLeft: 32, paddingRight: 32 }}
+              />
+            )}
+          </div>
+        </div>
       )}
-    </div>
-  </div>
-)}
-
- </GlassCard>
+    </GlassCard>
   );
 };
 
-// --- Tool Selection ---
-
+/**
+ * =========================================================
+ * TOOL SELECTOR
+ * =========================================================
+ */
 const ToolSelector = ({
   selectedTool,
   setSelectedTool,
@@ -348,10 +375,12 @@ const ToolSelector = ({
   setQuickFile,
   handleQuickUpload,
   quickFile,
+  fileError,
 }) => {
   const handleDownloadFormat = () => {
     const headers = "TMS ID,Brand Name,Service Type,Update Status To";
-    const rows = "TMS-1001,Livspace,Civil Interior,Closed\nTMS-1002,HomeLane,Installation,Open";
+    const rows =
+      "TMS-1001,Livspace,Civil Interior,Closed\nTMS-1002,HomeLane,Installation,Open";
 
     const csvContent = `${headers}\n${rows}`;
 
@@ -367,6 +396,14 @@ const ToolSelector = ({
     link.click();
     document.body.removeChild(link);
   };
+
+  const isValidCsv =
+    bulkFile &&
+    (bulkFile.type === "text/csv" || bulkFile.name.toLowerCase().endsWith(".csv"));
+
+  const isValidSize = bulkFile && bulkFile.size <= 10 * 1024 * 1024;
+
+  const canProcessFile = isValidCsv && isValidSize;
 
   if (!selectedTool) {
     return (
@@ -417,18 +454,46 @@ const ToolSelector = ({
         )}
 
         <label style={styles.label}>Data Source</label>
+
         <div style={styles.fileDrop}>
           <input
-  type="file"
-  accept=".csv,text/csv"
-  style={styles.fileInput}
-  onChange={(e) => setBulkFile(e.target.files?.[0])}
-/>
-          <span style={styles.fileName}>{bulkFile ? bulkFile.name : "Choose file..."}</span>
+            type="file"
+            accept=".csv"
+            style={styles.fileInput}
+            onChange={(e) => setBulkFile(e.target.files?.[0] || null)}
+          />
+          <span style={styles.fileName}>
+            {bulkFile ? bulkFile.name : "Choose CSV file..."}
+          </span>
         </div>
 
+        {/* File Validation Notes */}
+        {bulkFile && (
+          <div style={{ marginTop: 10 }}>
+            {!isValidCsv && (
+              <p style={styles.fileErrorText}>❌ Only CSV files are allowed</p>
+            )}
+            {!isValidSize && (
+              <p style={styles.fileErrorText}>❌ File size must be less than 10MB</p>
+            )}
+            {isValidCsv && isValidSize && (
+              <p style={styles.fileOkText}>✅ File looks good</p>
+            )}
+          </div>
+        )}
+
+        {fileError && (
+          <div style={{ marginTop: 10 }}>
+            <p style={styles.fileErrorText}>❌ {fileError}</p>
+          </div>
+        )}
+
         <div style={styles.btnWrapper}>
-          <PulsingButton label="Process File" active={!!bulkFile} onClick={handleBulkUpload} />
+          <PulsingButton
+            label="Process File"
+            active={!!bulkFile && canProcessFile}
+            onClick={handleBulkUpload}
+          />
         </div>
       </div>
     );
@@ -470,10 +535,13 @@ const ToolSelector = ({
           <div style={{ ...styles.fileDrop, flex: 1 }}>
             <input
               type="file"
+              accept=".csv"
               style={styles.fileInput}
-              onChange={(e) => setQuickFile(e.target.files?.[0])}
+              onChange={(e) => setQuickFile(e.target.files?.[0] || null)}
             />
-            <span style={styles.fileName}>{quickFile ? quickFile.name : "Choose CSV..."}</span>
+            <span style={styles.fileName}>
+              {quickFile ? quickFile.name : "Choose CSV..."}
+            </span>
           </div>
 
           <PulsingButton
@@ -486,16 +554,51 @@ const ToolSelector = ({
       </div>
     );
   }
+
+  return null;
 };
 
-// --- Main Page ---
-
-const parseCSV = (file) => {
+/**
+ * =========================================================
+ * CSV PARSER (STRICT HEADER CHECK FOR UPDATE STATUS)
+ * =========================================================
+ */
+const parseCSV = (file, action) => {
   return new Promise((resolve, reject) => {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       complete: (results) => {
+        const uploadedHeaders = results.meta.fields || [];
+
+        if (action === "Update Status") {
+          const requiredHeaders = [
+            "TMS ID",
+            "Brand Name",
+            "Service Type",
+            "Update Status To",
+          ];
+
+          const hasAllRequired = requiredHeaders.every((h) =>
+            uploadedHeaders.includes(h)
+          );
+
+          const hasExtraHeaders = uploadedHeaders.some(
+            (h) => !requiredHeaders.includes(h)
+          );
+
+          if (!hasAllRequired || hasExtraHeaders) {
+            reject(
+              new Error(
+                `Invalid CSV format. Required columns must be exactly: ${requiredHeaders.join(
+                  ", "
+                )}`
+              )
+            );
+            return;
+          }
+        }
+
         const rows = results.data.map((row) => ({
           tmsId: row["TMS ID"]?.trim() || "",
           brand: row["Brand Name"]?.trim() || "",
@@ -510,23 +613,16 @@ const parseCSV = (file) => {
   });
 };
 
+/**
+ * =========================================================
+ * MAIN PAGE
+ * =========================================================
+ */
 export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [isLanding, setIsLanding] = useState(true);
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState("empty");
-
-const isValidCsv =
-  bulkFile &&
-  (bulkFile.type === "text/csv" || bulkFile.name.toLowerCase().endsWith(".csv"));
-
-const isValidSize = bulkFile && bulkFile.size <= 10 * 1024 * 1024; // 10MB
-
-const canProcessFile = isValidCsv && isValidSize;
-
-
-  const [validCount, setValidCount] = useState(0);
-  const [invalidCount, setInvalidCount] = useState(0);
 
   const [selectedTool, setSelectedTool] = useState(null);
   const [bulkAction, setBulkAction] = useState("Update Status");
@@ -539,44 +635,46 @@ const canProcessFile = isValidCsv && isValidSize;
   const [batchId, setBatchId] = useState(null);
   const [stage, setStage] = useState("preview"); // preview | result
 
+  const [fileError, setFileError] = useState("");
+
   useEffect(() => setMounted(true), []);
 
   const N8N_VALIDATE_URL = "https://n8n.wiffy.ai/webhook/Uploaded-File";
+  const N8N_CONFIRM_URL = "https://n8n.wiffy.ai/webhook/confirm-file";
 
-const handleBulkUpload = async () => {
-  if (!bulkFile) return;
+  const handleBulkUpload = async () => {
+    if (!bulkFile) return;
 
-  try {
-    setLoading(true);
+    try {
+      setFileError("");
+      setLoading(true);
 
-    const rows = await parseCSV(bulkFile);
+      const rows = await parseCSV(bulkFile, bulkAction);
 
-    const res = await fetch(N8N_VALIDATE_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: bulkAction,
-        rows,
-      }),
-    });
+      const res = await fetch(N8N_VALIDATE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: bulkAction,
+          rows,
+        }),
+      });
 
-    const data = await res.json();
-    setBatchId(data.batchId);
+      const data = await res.json();
 
-    setValidationRows(data.rows); // returned from n8n
-    setValidCount(data.validCount); // validated rows
-    setInvalidCount(data.invalidCount);
-    setStage("preview");
+      setBatchId(data.batchId || null);
+      setValidationRows(data.rows || []);
+      setStage("preview");
 
-    setIsLanding(false);
-    setViewMode("validation");
-  } catch (err) {
-    console.error(err);
-    alert("Error processing file.");
-  } finally {
-    setLoading(false);
-  }
-};
+      setIsLanding(false);
+      setViewMode("validation");
+    } catch (err) {
+      console.error(err);
+      setFileError(err?.message || "Error processing file.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleConfirmRun = async () => {
     if (!batchId) {
@@ -587,20 +685,22 @@ const handleBulkUpload = async () => {
     try {
       setLoading(true);
 
-const res = await fetch("https://n8n.wiffy.ai/webhook/confirm-file", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    batchId,
-    rows: validationRows.filter(
-      (r) => r.remark && r.remark.toLowerCase().includes("ready")
-    ),
-  }),
-});
+      const validRows = validationRows.filter(
+        (r) => r.remark && r.remark.toLowerCase().includes("ready")
+      );
+
+      const res = await fetch(N8N_CONFIRM_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          batchId,
+          rows: validRows,
+        }),
+      });
 
       const data = await res.json();
 
-      setValidationRows(data.rows);
+      setValidationRows(data.rows || []);
       setStage("result");
     } catch (err) {
       console.error(err);
@@ -623,6 +723,18 @@ const res = await fetch("https://n8n.wiffy.ai/webhook/confirm-file", {
     setValidationRows([]);
     setBatchId(null);
     setStage("preview");
+    setFileError("");
+  };
+
+  const handleReupload = () => {
+    // Reset only file + validation states, keep tool selection
+    setBulkFile(null);
+    setValidationRows([]);
+    setBatchId(null);
+    setStage("preview");
+    setViewMode("empty");
+    setIsLanding(true);
+    setFileError("");
   };
 
   if (!mounted) return null;
@@ -655,7 +767,9 @@ const res = await fetch("https://n8n.wiffy.ai/webhook/confirm-file", {
             {!selectedTool && (
               <div style={styles.heroText}>
                 <h1 style={styles.heroTitle}>Ticket Portal</h1>
-                <p style={styles.heroSubtitle}>Manage operations with speed and precision.</p>
+                <p style={styles.heroSubtitle}>
+                  Manage operations with speed and precision.
+                </p>
               </div>
             )}
 
@@ -680,6 +794,7 @@ const res = await fetch("https://n8n.wiffy.ai/webhook/confirm-file", {
                   quickFile={quickFile}
                   setQuickFile={setQuickFile}
                   handleQuickUpload={handleQuickUpload}
+                  fileError={fileError}
                 />
               )}
             </GlassCard>
@@ -688,13 +803,19 @@ const res = await fetch("https://n8n.wiffy.ai/webhook/confirm-file", {
 
         {!isLanding && (
           <div style={styles.dashboardContainer}>
-            <div style={{ ...styles.contentArea, maxWidth: viewMode === "validation" ? "100%" : 1100 }}>
+            <div
+              style={{
+                ...styles.contentArea,
+                maxWidth: viewMode === "validation" ? "100%" : 1100,
+              }}
+            >
               {viewMode === "validation" && (
                 <ValidationTable
                   rows={validationRows}
                   actionName={bulkAction}
                   stage={stage}
                   onConfirm={handleConfirmRun}
+                  onReupload={handleReupload}
                 />
               )}
             </div>
@@ -705,8 +826,11 @@ const res = await fetch("https://n8n.wiffy.ai/webhook/confirm-file", {
   );
 }
 
-// --- Styles ---
-
+/**
+ * =========================================================
+ * STYLES
+ * =========================================================
+ */
 const styles = {
   page: { minHeight: "100vh", position: "relative", overflowX: "hidden" },
   background: {
@@ -822,12 +946,17 @@ const styles = {
     textAlign: "center",
   },
   formContainer: {
-    maxWidth: 500,
+    maxWidth: 520,
     width: "100%",
     margin: "0 auto",
     animation: "fade-in 0.3s ease",
   },
-  formHeader: { display: "flex", alignItems: "center", marginBottom: 24, gap: 16 },
+  formHeader: {
+    display: "flex",
+    alignItems: "center",
+    marginBottom: 24,
+    gap: 16,
+  },
   backBtn: {
     background: "none",
     border: "none",
@@ -861,7 +990,8 @@ const styles = {
   },
   verticalDivider: {
     width: 1,
-    background: "linear-gradient(to bottom, transparent, rgba(0,0,0,0.1), transparent)",
+    background:
+      "linear-gradient(to bottom, transparent, rgba(0,0,0,0.1), transparent)",
     margin: "0 10px",
   },
   dashboardContainer: { display: "flex", justifyContent: "center", width: "100%" },
@@ -989,7 +1119,7 @@ const styles = {
     marginBottom: 32,
   },
   tableContainer: { overflowX: "auto", width: "100%" },
-  table: { width: "100%", borderCollapse: "collapse", minWidth: 800 },
+  table: { width: "100%", borderCollapse: "collapse", minWidth: 900 },
   th: {
     textAlign: "left",
     padding: "16px 8px",
@@ -1006,8 +1136,20 @@ const styles = {
     color: "#1d1d1f",
   },
   footerRow: { marginTop: 32, display: "flex", justifyContent: "flex-end" },
-  loadingWrapper: { display: "flex", flexDirection: "column", alignItems: "center", padding: 60 },
+  loadingWrapper: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    padding: 60,
+  },
   spinnerWrapper: {
+    width: 44,
+    height: 44,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  spinner: {
     width: 40,
     height: 40,
     border: "4px solid rgba(0,0,0,0.1)",
@@ -1023,5 +1165,25 @@ const styles = {
     borderRadius: 20,
     fontSize: 12,
     fontWeight: 600,
+  },
+  fileErrorText: {
+    margin: 0,
+    fontSize: 13,
+    fontWeight: 600,
+    color: "#ef4444",
+  },
+  fileOkText: {
+    margin: 0,
+    fontSize: 13,
+    fontWeight: 600,
+    color: "#10b981",
+  },
+  statChip: {
+    fontSize: 12,
+    padding: "6px 10px",
+    borderRadius: 999,
+    background: "rgba(255,255,255,0.6)",
+    border: "1px solid rgba(0,0,0,0.08)",
+    color: "#1d1d1f",
   },
 };
