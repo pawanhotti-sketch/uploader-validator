@@ -737,6 +737,16 @@ const goHome = () => {
     setFileError("");
   };
 
+  const handleReupload = () => {
+    // Reset only file + validation states, keep tool selection
+    setBulkFile(null);
+    setValidationRows([]);
+    setBatchId(null);
+    setStage("preview");
+    setViewMode("empty");
+    setIsLanding(true);
+    setFileError("");
+  };
 
   if (!mounted) return null;
 
